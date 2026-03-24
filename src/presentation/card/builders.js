@@ -690,13 +690,27 @@ function mergeReplyText(previousText, nextText) {
   if (!nextText) {
     return previousText;
   }
+  if (previousText === nextText) {
+    return previousText;
+  }
   if (nextText.startsWith(previousText)) {
     return nextText;
+  }
+  if (previousText.endsWith(nextText)) {
+    return previousText;
   }
   if (previousText.startsWith(nextText)) {
     return previousText;
   }
-  return nextText;
+
+  const maxOverlap = Math.min(previousText.length, nextText.length);
+  for (let overlap = maxOverlap; overlap > 0; overlap -= 1) {
+    if (previousText.slice(-overlap) === nextText.slice(0, overlap)) {
+      return previousText + nextText.slice(overlap);
+    }
+  }
+
+  return previousText + nextText;
 }
 
 
