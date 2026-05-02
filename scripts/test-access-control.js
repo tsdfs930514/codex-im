@@ -2,6 +2,7 @@ const assert = require("assert");
 
 const accessControl = require("../src/domain/access/access-control");
 const {
+  extractCardAction,
   normalizeFeishuTextEvent,
 } = require("../src/presentation/message/normalizers");
 
@@ -70,6 +71,26 @@ function decide(event) {
 {
   assert.equal(accessControl.isAllowedFeishuUser(config, "ou_allowed"), true);
   assert.equal(accessControl.isAllowedFeishuUser(config, "ou_other"), false);
+}
+
+{
+  const action = extractCardAction({
+    action: {
+      value: { kind: "panel", action: "set_model" },
+      selected_option: { value: "gpt-5.4" },
+    },
+  });
+  assert.equal(action.selectedValue, "gpt-5.4");
+}
+
+{
+  const action = extractCardAction({
+    action: {
+      value: { kind: "panel", action: "set_effort" },
+      selected_value: "high",
+    },
+  });
+  assert.equal(action.selectedValue, "high");
 }
 
 console.log("[codex-im] access-control tests passed");

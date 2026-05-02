@@ -184,13 +184,40 @@ function extractCardChatId(data) {
 }
 
 function extractCardSelectedValue(action, value) {
-  if (typeof action?.option?.value === "string" && action.option.value.trim()) {
-    return action.option.value.trim();
+  const candidates = [
+    action?.option?.value,
+    action?.option,
+    action?.selected_option?.value,
+    action?.selectedOption?.value,
+    action?.selected_value,
+    action?.selectedValue,
+    action?.value?.selectedValue,
+    action?.value?.selected_value,
+    value?.selectedValue,
+    value?.selected_value,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeIdentifier(candidate);
+    if (normalized) {
+      return normalized;
+    }
   }
-  if (typeof action?.option === "string" && action.option.trim()) {
-    return action.option.trim();
+
+  if (Array.isArray(action?.options)) {
+    const selected = action.options.find((option) => normalizeIdentifier(option?.value));
+    if (selected) {
+      return normalizeIdentifier(selected.value);
+    }
   }
-  return typeof value?.selectedValue === "string" ? value.selectedValue.trim() : "";
+  if (Array.isArray(action?.selected_options)) {
+    const selected = action.selected_options.find((option) => normalizeIdentifier(option?.value));
+    if (selected) {
+      return normalizeIdentifier(selected.value);
+    }
+  }
+
+  return "";
 }
 
 function normalizeIdentifier(value) {
@@ -199,6 +226,7 @@ function normalizeIdentifier(value) {
 
 module.exports = {
   extractCardAction,
+  extractCardSelectedValue,
   mapCodexMessageToImEvent,
   normalizeCardActionContext,
   normalizeFeishuTextEvent,
