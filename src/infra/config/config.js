@@ -13,6 +13,8 @@ function readConfig() {
     workspaceAllowlist: readListEnv("CODEX_IM_WORKSPACE_ALLOWLIST"),
     codexEndpoint: process.env.CODEX_IM_CODEX_ENDPOINT || "",
     codexCommand: process.env.CODEX_IM_CODEX_COMMAND || "",
+    allowedFeishuUserIds: readListEnv("CODEX_IM_ALLOWED_FEISHU_USER_IDS"),
+    groupMentionPrefix: readTextEnv("CODEX_IM_GROUP_MENTION_PREFIX"),
     defaultCodexModel: readTextEnv("CODEX_IM_DEFAULT_CODEX_MODEL"),
     defaultCodexEffort: readTextEnv("CODEX_IM_DEFAULT_CODEX_EFFORT"),
     defaultCodexAccessMode: readAccessModeEnv("CODEX_IM_DEFAULT_CODEX_ACCESS_MODE"),
@@ -22,6 +24,8 @@ function readConfig() {
     },
     defaultWorkspaceId: process.env.CODEX_IM_DEFAULT_WORKSPACE_ID || "default",
     feishuStreamingOutput: readBooleanEnv("CODEX_IM_FEISHU_STREAMING_OUTPUT", true),
+    requireWorkspaceAllowlist: readBooleanEnv("CODEX_IM_REQUIRE_WORKSPACE_ALLOWLIST", true),
+    autoApproveCommands: readBooleanEnv("CODEX_IM_AUTO_APPROVE_COMMANDS", false),
     sessionsFile: process.env.CODEX_IM_SESSIONS_FILE
       || path.join(os.homedir(), ".codex-im", "sessions.json"),
   };

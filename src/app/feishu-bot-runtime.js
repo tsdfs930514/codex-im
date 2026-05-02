@@ -94,6 +94,12 @@ class FeishuBotRuntime {
     if (!this.config.feishu.appId || !this.config.feishu.appSecret) {
       throw new Error("FEISHU_APP_ID and FEISHU_APP_SECRET are required for feishu-bot mode");
     }
+    if (!this.config.allowedFeishuUserIds.length) {
+      throw new Error("CODEX_IM_ALLOWED_FEISHU_USER_IDS is required for personal Feishu access control");
+    }
+    if (!String(this.config.groupMentionPrefix || "").trim()) {
+      throw new Error("CODEX_IM_GROUP_MENTION_PREFIX is required for group chat message triggers");
+    }
     if (!String(this.config.defaultCodexModel || "").trim()) {
       throw new Error("CODEX_IM_DEFAULT_CODEX_MODEL is required");
     }
@@ -103,6 +109,11 @@ class FeishuBotRuntime {
     if (!String(this.config.defaultCodexAccessMode || "").trim()) {
       throw new Error(
         "CODEX_IM_DEFAULT_CODEX_ACCESS_MODE is required and must be one of: default, full-access"
+      );
+    }
+    if (this.config.requireWorkspaceAllowlist && !this.config.workspaceAllowlist.length) {
+      throw new Error(
+        "CODEX_IM_WORKSPACE_ALLOWLIST is required when CODEX_IM_REQUIRE_WORKSPACE_ALLOWLIST is true"
       );
     }
   }

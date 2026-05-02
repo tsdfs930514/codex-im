@@ -44,6 +44,15 @@ npm install
 npm run feishu-bot
 ```
 
+如果准备自己改造后长期使用，建议先 Fork 仓库，再把本地仓库的 `origin`
+改成自己的 Fork；原仓库保留为 `upstream`，方便后续同步作者更新：
+
+```sh
+git remote rename origin upstream
+git remote add origin https://github.com/<你的 GitHub 用户名>/codex-im.git
+git push -u origin main
+```
+
 ### 执行脚本示例
 
 ```bash
@@ -76,6 +85,8 @@ codex-im feishu-bot
 
 - `FEISHU_APP_ID`
 - `FEISHU_APP_SECRET`
+- `CODEX_IM_ALLOWED_FEISHU_USER_IDS` 允许控制机器人的飞书用户 ID 列表（逗号分隔，个人使用建议只填自己的 open_id）
+- `CODEX_IM_GROUP_MENTION_PREFIX` 群聊自然语言触发前缀，例如 `@Codex`
 - `CODEX_IM_DEFAULT_CODEX_MODEL` 新绑定项目时默认写入的模型（启动时会基于 Codex 可用模型列表校验，不合法则启动失败）
 - `CODEX_IM_DEFAULT_CODEX_EFFORT` 新绑定项目时默认写入的推理强度（启动时会基于对应模型可用推理强度校验，不合法则启动失败）
 - `CODEX_IM_DEFAULT_CODEX_ACCESS_MODE` 默认访问模式（必填：`default` / `full-access`）
@@ -84,9 +95,43 @@ codex-im feishu-bot
 
 - `CODEX_IM_DEFAULT_WORKSPACE_ID` 在session中读取当前绑定信息的key，更换key后，原来的信息虽然在session中，但是不会再读取
 - `CODEX_IM_FEISHU_STREAMING_OUTPUT`（默认 `true`，设为 `false` 则等 Codex 完成后一次性输出）
+- `CODEX_IM_REQUIRE_WORKSPACE_ALLOWLIST`（默认 `true`，启动时要求必须配置项目白名单，适合飞书远程控制场景）
+- `CODEX_IM_AUTO_APPROVE_COMMANDS`（默认 `false`，是否允许记住审批命令前缀并自动审批）
 - `CODEX_IM_WORKSPACE_ALLOWLIST`允许绑定的项目白名单
 - `CODEX_IM_CODEX_ENDPOINT` 用来指定 Codex 的远程 WebSocket RPC 地址，默认是启动本地服务
 - `CODEX_IM_SESSIONS_FILE` session文件路径
+
+### 建议的安全配置
+
+飞书消息会远程控制本机 Codex，因此建议先用最小权限运行，只允许绑定你明确
+准备开放给机器人的项目目录，不要把整个用户目录或磁盘根目录放进白名单。
+
+```env
+CODEX_IM_DEFAULT_CODEX_ACCESS_MODE=default
+CODEX_IM_ALLOWED_FEISHU_USER_IDS=ou_xxxxxxxxxxxxxxxxx
+CODEX_IM_GROUP_MENTION_PREFIX=@Codex
+CODEX_IM_REQUIRE_WORKSPACE_ALLOWLIST=true
+CODEX_IM_AUTO_APPROVE_COMMANDS=false
+CODEX_IM_WORKSPACE_ALLOWLIST=C:\Users\your-name\code\your-project
+```
+
+确认飞书单聊流程稳定后，再按需扩大白名单。除非你完全理解风险，否则不建议
+在飞书群聊里使用 `full-access` 或开启自动审批。
+
+个人版默认行为：
+
+- 只有 `CODEX_IM_ALLOWED_FEISHU_USER_IDS` 中的用户可以发消息或点击卡片。
+- 单聊中，你的普通消息会直接进入 Codex。
+- 群聊中，`/codex ...` 命令会被处理；自然语言必须以 `CODEX_IM_GROUP_MENTION_PREFIX` 开头，例如 `@Codex 帮我看一下`。
+- 群聊自然语言进入 Codex 前会移除前缀，Codex 实际收到 `帮我看一下`。
+
+本地验证：
+
+```sh
+npm run check
+npm run test:access
+npm audit --omit=dev
+```
 
 
 

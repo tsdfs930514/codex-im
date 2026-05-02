@@ -262,6 +262,16 @@ async function handleSendCommand(runtime, normalized) {
     return;
   }
 
+  const realTarget = await resolveRealWorkspaceSendTarget(workspaceRoot, resolvedTarget.filePath);
+  if (realTarget.errorText) {
+    await runtime.sendInfoCardMessage({
+      chatId: normalized.chatId,
+      replyToMessageId: normalized.messageId,
+      text: realTarget.errorText,
+    });
+    return;
+  }
+
   if (fileStats.size <= 0) {
     await runtime.sendInfoCardMessage({
       chatId: normalized.chatId,
@@ -281,11 +291,11 @@ async function handleSendCommand(runtime, normalized) {
   }
 
   try {
-    const fileBuffer = await fs.promises.readFile(resolvedTarget.filePath);
+    const fileBuffer = await fs.promises.readFile(realTarget.filePath);
     await runtime.sendFileMessage({
       chatId: normalized.chatId,
       replyToMessageId: normalized.messageId,
-      fileName: path.basename(resolvedTarget.filePath),
+      fileName: path.basename(realTarget.filePath),
       fileBuffer,
     });
     console.log(`[codex-im] file/send ok workspace=${workspaceRoot} path=${resolvedTarget.displayPath}`);
@@ -627,6 +637,19 @@ function resolveWorkspaceSendTarget(workspaceRoot, requestedPath) {
     filePath,
     displayPath: normalizeWorkspacePath(path.relative(workspaceRoot, filePath)) || path.basename(filePath),
   };
+}
+
+async function resolveRealWorkspaceSendTarget(workspaceRoot, filePath) {
+  const [realWorkspaceRoot, realFilePath] = await Promise.all([
+    fs.promises.realpath(workspaceRoot),
+    fs.promises.realpath(filePath),
+  ]);
+
+  if (!pathMatchesWorkspaceRoot(realFilePath, realWorkspaceRoot)) {
+    return { errorText: "文件真实路径超出了当前项目根目录，无法发送。" };
+  }
+
+  return { filePath: realFilePath };
 }
 
 function parseUpdateDirective(value) {

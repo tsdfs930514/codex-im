@@ -1,12 +1,21 @@
 const messageNormalizers = require("../presentation/message/normalizers");
+const accessControl = require("../domain/access/access-control");
 const eventsRuntime = require("./codex-event-service");
 const { formatFailureText } = require("../shared/error-text");
 
 async function onFeishuTextEvent(runtime, event) {
-  const normalized = messageNormalizers.normalizeFeishuTextEvent(event, runtime.config);
-  if (!normalized) {
+  const rawNormalized = messageNormalizers.normalizeFeishuTextEvent(event, runtime.config);
+  if (!rawNormalized) {
     return;
   }
+  const accessDecision = accessControl.shouldHandleFeishuText(runtime.config, rawNormalized);
+  if (!accessDecision.allowed) {
+    console.log(
+      `[codex-im] ignored Feishu message reason=${accessDecision.reason} sender=${rawNormalized.senderId || "-"} chat=${rawNormalized.chatId || "-"}`
+    );
+    return;
+  }
+  const normalized = accessDecision.normalized || rawNormalized;
 
   if (await runtime.dispatchTextCommand(normalized)) {
     return;
@@ -55,6 +64,13 @@ async function onFeishuTextEvent(runtime, event) {
 
 async function onFeishuCardAction(runtime, data) {
   try {
+    const context = messageNormalizers.normalizeCardActionContext(data, runtime.config);
+    if (!context || !accessControl.isAllowedFeishuUser(runtime.config, context.senderId)) {
+      console.log(
+        `[codex-im] ignored Feishu card action reason=unauthorized_user sender=${context?.senderId || "-"}`
+      );
+      return runtime.buildCardToast("无权操作此 Codex 机器人。");
+    }
     return await runtime.handleCardAction(data);
   } catch (error) {
     console.error(`[codex-im] failed to process card action: ${error.message}`);

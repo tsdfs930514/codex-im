@@ -1,6 +1,10 @@
 const codexMessageUtils = require("../../infra/codex/message-utils");
 
 function rememberApprovalPrefixForWorkspace(runtime, workspaceRoot, commandTokens) {
+  if (!runtime.config.autoApproveCommands) {
+    return;
+  }
+
   const normalizedTokens = codexMessageUtils.normalizeCommandTokens(commandTokens);
   if (!workspaceRoot || !normalizedTokens.length) {
     return;
@@ -14,6 +18,10 @@ function rememberApprovalPrefixForWorkspace(runtime, workspaceRoot, commandToken
 }
 
 function shouldAutoApproveRequest(runtime, workspaceRoot, approval) {
+  if (!runtime.config.autoApproveCommands) {
+    return false;
+  }
+
   if (!workspaceRoot || !approval) {
     return false;
   }
